@@ -22,6 +22,8 @@ class Garden:
         self.mongo_host = config['MONGO']['HOST']
         self.mongo_port = config['MONGO']['PORT']
 
+        self.gardening_days = config['DEFAULT']['GARDENING_DAYS']
+
         # mongodb collections
         self.mongo_collection_slack_message = "slack_messages"
 
@@ -34,13 +36,16 @@ class Garden:
         with open(path) as file:
             self.users_with_slackname = yaml.full_load(file)
 
-        self.start_date = datetime(2019, 10, 1).date() # 2019-10-01
+        self.start_date = datetime.strptime(config['DEFAULT']['START_DATE'], "%Y-%m-%d").date()  # start_date e.g.) 2019-10-01
 
     def connect_mongo(self):
         return pymongo.MongoClient("mongodb://%s:%s" % (self.mongo_host, self.mongo_port))
 
     def get_member(self):
         return self.users
+
+    def get_gardening_days(self):
+        return self.gardening_days
 
     '''
     github userid - slack username
@@ -104,11 +109,11 @@ class Garden:
 
     # github 봇으로 모은 slack message 들을 slack_messages collection 에 저장
     def collect_slack_messages(self, oldest, latest):
-        # print(oldest)
-        # print(datetime.fromtimestamp(oldest))
-        # print(latest)
-        # print(datetime.fromtimestamp(latest))
-        # print(self.channel_id)
+        print(oldest)
+        print(datetime.fromtimestamp(oldest))
+        print(latest)
+        print(datetime.fromtimestamp(latest))
+        print(self.channel_id)
 
         response = self.slack_client.channels_history(
             channel=self.channel_id,
@@ -122,9 +127,10 @@ class Garden:
         db = conn.get_database(self.mongo_database)
         mongo_collection = db.get_collection(self.mongo_collection_slack_message)
 
+        print(response)
         for message in response["messages"]:
             message["ts_for_db"] = datetime.fromtimestamp(float(message["ts"]))
-            # pprint.pprint(message)
+            pprint.pprint(message)
 
             try:
                 mongo_collection.insert_one(message)

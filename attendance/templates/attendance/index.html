@@ -23,6 +23,7 @@
     }
 
     // 유저 리스트 조회
+    // 민정 리뉴얼 후 사용 x
     function get_users() {
         $.ajax({
             method: "GET",
@@ -33,30 +34,67 @@
             let html = "";
             $.each(data, function(index, user) {
                 let avatar_img_url = getAvatarImgUrl(user);
-                html += `<a href="/attendance/users/${user}">`;
-                html += `<img src="${avatar_img_url}" width="60" />`;
-                html += `</a>`;
+                html += 
+                `<div class="card mb-2">
+                    <div class="row no-gutters">
+                        <div class="col-md-6">
+                            <a href="/attendance/users/${user}">
+                                <img src="${avatar_img_url}" class= "card-img-top" alt="..." />
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                        <div class="card-body">
+                        </div>
+                        </div>
+                    </div>
+                </div>`;
             });
             $("#users").html(html);
         });
     }
 
+    
+
     // 진행률 그리기
     function draw_progress(context) {
-        let html = "";
+        let html;
 
         let progress_rate = Math.round(context.progressed_days / context.total_days * 100);
+        html = `<h5 class="text-center">총 ${context.total_days}일 중 ${context.progressed_days}일 진행</h5>`;
 
-        html = `진행률 ${progress_rate}%
-         (총 ${context.total_days}일 중 ${context.progressed_days}일 진행)
-        <div class="progress">
-          <div class="progress-bar progress-bar-striped progress-bar-animated"
-role="progressbar"
-aria-valuenow="${progress_rate}" aria-valuemin="0"
-aria-valuemax="100"
-style="width: ${progress_rate}%"></div>
-        </div>
-`;
+        var bar = new ProgressBar.Circle('#circle-progress', {
+        color: '#aaa',
+        // This has to be the same size as the maximum width to
+        // prevent clipping
+        strokeWidth: 10,
+        trailWidth: 4,
+        easing: 'easeInOut',
+        duration: 1400,
+        text: {
+            autoStyleContainer: false
+        },
+        from: { color: '#006400', width: 10 },
+        to: { color: '#006400', width: 20 },
+        // Set default step function for all animate calls
+        step: function(state, circle) {
+            circle.path.setAttribute('stroke', state.color);
+            circle.path.setAttribute('stroke-width', state.width);
+
+            var value = Math.round(circle.value() * 100);
+            if (value === 0) {
+            circle.setText('');
+            } else {
+            circle.setText(value+"%");
+            }
+
+        }
+        });
+        bar.text.style.fontFamily = '"Raleway", Helvetica, sans-serif';
+        bar.text.style.fontSize = '2rem';
+        bar.text.style.color = "#004600";
+
+        bar.animate(progress_rate/100);  // Number from 0.0 to 1.0
+
         $("#progress").html(html);
     }
 
@@ -199,50 +237,63 @@ ${item.user}</td>`;
 
     // 출석/미출석 그리기
     function draw_attend_noshow(context) {
-        let total_attandance_rate = context.total_attend_count / (context.total_attend_count + context.total_noshow_count) * 100;
+        html = `<h5 class="text-center">총 ${context.total_days}일 중 ${context.progressed_days}일 진행</h5>`;
+        //출석 / 미출석
+        let total_attandance_rate = Math.round(context.total_attend_count / (context.total_attend_count + context.total_noshow_count) * 100);
+            
         let attend_noshow_html = "";
-        attend_noshow_html += `${context.total_attend_count}/${context.total_noshow_count}<br>`;
-        attend_noshow_html += `전체 출석률: ${Math.round(total_attandance_rate)}%`;
+        attend_noshow_html += `
+        <br><h5 class ="text-center">전체 출석률 ${total_attandance_rate}%</h5>
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: ${total_attandance_rate}%;" aria-valuenow="${total_attandance_rate}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>`;
+        attend_noshow_html += `<p class="text-right text-muted"> 출석 : ${context.total_attend_count} / 미출석 : ${context.total_noshow_count}</p>`
 
         $("#attend_noshow_div").html(attend_noshow_html);
     }
 
-    // 오늘의 출석부
-    function draw_today_attendance(today_attendances) {
-        let today_attendance_html = `<table class="table table-sm table-today-attendance"><tbody>`;
+    // 오늘의 출석부 // 커미터스 정보로 사용중
+    function draw_today_attendance(context, today_attendances) {
 
+        let today_attendance_html = "<h5>커미터스의 오늘의 출석 : 1시간 갱신</h5>";
         let count_attendance = 0;
         let num_per_line = 10;
+
+        console.log(today_attendances);
+        console.log(context);
+
         $.each(today_attendances, function(idx, row) {
-            if (idx % num_per_line === 0)
-                today_attendance_html += `<tr>`;
-
-            let formatted_datetime = "";
-            if (row.attend !== null) {
-                let avatar_img_url = getAvatarImgUrl(row.name);
-                formatted_datetime = moment(row.attend).format("YYYY-MM-DD HH:mm:ss");
-                count_attendance++;
-                today_attendance_html += `<td>${row.name}<br>
-<a href="/attendance/users/${row.name}">
-<img src="${avatar_img_url}" width="60">
-</a>
-<br>출석성공!</td>`;
-            } else {
-                today_attendance_html += `<td>${row.name}<br>
-<a href="/attendance/users/${row.name}">
-<span class="no-show">🏋</span>
-</a>
-</td>`;
+            if(idx%4 == 0){
+                today_attendance_html+= `<div class="row">`;
             }
-
-            if (idx % num_per_line === num_per_line - 1)
-                today_attendance_html += `</tr>`;
-
+            let attend_state = "";
+            if(row.attend !== null){
+                attend_state = "background: #004600; color: white;";
+                count_attendance++;
+            }
+            let avatar_img_url = getAvatarImgUrl(row.name);
+            today_attendance_html += 
+            `
+            <div class="card col-sm" style="width: 18rem; padding: 10px; margin: 5px; border: solid; border-color: #004600; ${attend_state}">
+                <a href="/attendance/users/${row.name}">
+                    <img src="${avatar_img_url}" class= "card-img-top" alt="${row.name}" />
+                </a>
+                <p class="card-text text-center">${row.name}</p>
+            </div>`;
+            if(idx%4==3){
+                today_attendance_html+= `</div>`;
+            }
+                
         });
 
-        today_attendance_html += `</tbody></table>`;
+        today_attendance_html+="</div>";
+
         let rate = Math.round(count_attendance/today_attendances.length*100);
-        today_attendance_html += `오늘의 출석률: ${rate}%`;
+        today_attendance_html+=`<br><h5>오늘의 출석률 ${rate}%</h5>`;
+        today_attendance_html += `
+        <div class="progress" style="height: 20px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: ${rate}%;" aria-valuenow="${rate}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>`;    
 
         $("#today_attendance").html(today_attendance_html);
     }
@@ -322,12 +373,12 @@ ${data_row.user}
             let context = {
                 total_attend_count: 0, // 전체 출석 카운트
                 total_noshow_count: 0, // 전체 미출석 카운트
-                start_day: new Date(2019, 10-1, 1), // 시작일 2019.10.01
+                start_day: new Date(2020, 0, 19), // 시작일 2020.01.19
                 today: new Date(), // 오늘
                 formatted_today: moment().format("YYYY-MM-DD"),
                 yesterday: new Date(new Date().setDate(new Date().getDate()-1)), // 어제
                 formatted_dates: [], // 시작일~어제 까지 YYYY-MM-DD 리스트
-                total_days: 100, // 100일간 진행함
+                total_days: 70, // 100일간 진행함
                 progressed_days: 0, // 진행 일수
                 daily_count: {}, // 날짜별 출석 카운트
                 hourly_count: {}, // 시간별 출석 카운트
@@ -336,8 +387,9 @@ ${data_row.user}
                 attendance_count_by_weekdays: {}, // 요일별 출석수
             };
 
-            // 출석부 날짜 범위 2019.10.01 ~ 어제
-            for (let d = context.start_day; d <= context.yesterday; d.setDate(d.getDate() + 1)) {
+            // 출석부 날짜 범위 2020.01.19 ~ 어제 (단, 마지막 날 까지만)
+
+            for (let d = context.start_day; d <= context.yesterday; new Date(d.setDate(d.getDate() + 1))) {
                 context.formatted_dates.push(moment(d).format("YYYY-MM-DD"));
             }
 
@@ -350,6 +402,7 @@ ${data_row.user}
 
             // 유저 단위 loop
             $.each(data, function(index, data_row) {
+                console.log(data_row);
                 let count_by_user = 0;
                 // 유저의 날짜별 출석 데이터 조회
                 $.each(context.formatted_dates, function (idx, formatted_date) {
@@ -436,7 +489,7 @@ ${data_row.user}
             draw_attendance_chart(context);
 
             // 오늘 출석 현황
-            draw_today_attendance(today_attendances);
+            draw_today_attendance(context, today_attendances);
 
             // 요일별 출석률
             draw_attendance_rate_by_weekdays(context);
@@ -448,19 +501,37 @@ ${data_row.user}
             alert("출석부 실패");
         });
     }
+    
 </script>
+<br>
 <div class="container">
-    <h2 id="users_title">정원사들</h2>
-    <div id="users"></div>
-    <br>
-    <h2 id="progress_title">정원사들 시즌4 진행률</h2>
-    <div id="progress"></div>
-    <br>
-    <h2 id="attend_noshow_title">출석/미출석</h2>
-    <div id="attend_noshow_div"></div>
-    <br>
-    <h2 id="today_attendance_title">오늘의 출석부</h2>1시간 마다 갱신 됩니다.
-    <div id="today_attendance"></div>
+    <div class="row">
+        <div class="col-8">
+            <div class="card">
+                <div class="card-header">
+                    <div><h3 id="users_title">이화의 커미터스</h3></div>
+                </div>
+                <div class="card-body">
+                    <div id="today_attendance"></div>
+                </div>
+              </div>
+        </div>
+        <div class="col-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 id="progress_title">진행률</h3>
+                </div>
+                <div class="card-body">
+                    <div id="progress"></div>
+                    <div id="circle-progress"></div>
+                    <div id="attend_noshow_div"></div>
+
+                </div>
+              </div>
+        </div>
+    </div>
+    
+
     <br>
 </div>
 <div class="container-fluid">
@@ -483,5 +554,7 @@ ${data_row.user}
     <div id="attendance_count_by_hours"></div>
     <div id="attendance_count_by_hours_chart"></div>
 </div>
+
+
 
 {% endblock %}

@@ -1,3 +1,6 @@
 garden4-backend/attendance/config.ini
 db.sqlite3
 users.yaml
+.vscode
+venv
+config.ini
