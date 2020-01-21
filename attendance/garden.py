@@ -47,6 +47,9 @@ class Garden:
     def get_gardening_days(self):
         return self.gardening_days
 
+    def get_start_date(self):
+        return self.start_date
+
     '''
     github userid - slack username
     '''

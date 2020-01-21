@@ -5,10 +5,13 @@ from .garden import Garden
 import pprint
 import markdown
 from python_markdown_slack import PythonMarkdownSlack
-
+import configparser
+from datetime import date, timedelta, datetime
 
 def index(request):
     garden = Garden()
+    config = configparser.ConfigParser()
+
     context = {
         "gardening_days": garden.get_gardening_days()
     }
