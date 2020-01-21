@@ -48,14 +48,14 @@ function draw_calendar(attendances) {
 </thead>
 <tbody>`;
     let today = new Date();
-    let lastday = new Date(2019, 10-1, 1 + {{ gardening_days }} - 1);
+    let lastday = new Date(2020, 1-1, 19 + {{ gardening_days }} - 1);
     let endday;
     if (lastday < today) {
         endday = lastday;
     } else {
         endday = today;
     }
-    const dates = getDates(new Date(2019, 9-1, 29), endday);
+    const dates = getDates(new Date(2020, 1-1, 19), endday);
     $.each(dates, function (idx, date) {
         if (idx % 7 === 0) {
             html += `<tr>`;
@@ -65,7 +65,7 @@ function draw_calendar(attendances) {
         if (formatted_date in attendances_by_date) {
             message += `${formatted_date}<br><span class="attend-emoji">😀<span>`;
         } else {
-            if (date < new Date(2019, 10-1, 1)) {
+            if (date < new Date(2020, 1-1, 19)) {
                 message = "";
             } else {
                 message = `${formatted_date}<br><span class="attend-emoji">😰<span>`;
@@ -88,18 +88,24 @@ ${message}
 
 // 커밋 내역 그리기
 function draw_commits(attendances) {
-    let html = "";
+    let html = `<div class="accordion" id="accordionExample">`;
+    
     $.each(attendances, function(idx, attendance) {
-        {#console.log(attendance);#}
-        html += `<h4>${attendance.date}</h4>`;
+        
+        html += `<div class="card">
+            <button class="btn btn-link collapsed card-head commit-card-text" type="button" data-toggle="collapse" data-target="#collapse${idx}" aria-expanded="false" aria-controls="collapse${idx}">
+            <div class="card-header" id="heading${idx}">
+                <span >${attendance.date} commit
+            </div>
+            </button>
+                <div id="collapse${idx}" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
+                <div class="card-body">`;
+
         $.each(attendance.commits, function(idx, commit) {
             commit.message[0] = commit.message[0].replace(/(?:\r\n|\r|\n)/g, '<br>');
             html += `${commit.message[0]}`;
-            //$.each(commit.message, function(idx, message) {
-            //    console.log(message);
-            //    html += `${message}<br>`;
-            //});
         })
+        html += `</div></div></div>`;
     });
     $("#commits").html(html);
 }
@@ -124,17 +130,44 @@ $(document).ready(function () {
 </script>
 
 <div class="container">
-    <h2>유저별 출석부</h2>
-    {{ user }} 의 출석부!<br>
-    <img src="https://avatars.githubusercontent.com/{{user}}" width="200"><br>
-    github: <a href="https://github.com/{{ user }}" target="_blank">https://github.com/{{ user }}</a><br>
     <br>
-
-    <h2>나의 출석부</h2>
+    <div class="card mb-3" style="max-width: 540px;">
+        <div class="row no-gutters">
+            <div class="col-md-4">
+                <img src="https://avatars.githubusercontent.com/{{user}}" class="card-img" width="200">
+            </div>
+            <div class="col-md-8">
+            <div class="card-body">
+                <h5 class="card-title">{{ user }} 의 출석부!</h5>
+                <p class="card-text"><a href="https://github.com/{{ user }}" class="card-text" target="_blank">https://github.com/{{ user }}</a><br></p>
+            </div>
+            </div>
+        </div>
+    </div>
+    <br/>
     <div id="attendance_calendar"></div>
-
-    <h2>커밋 내역</h2>
+    <br/>
     <div id="commits"></div>
 </div>
 
+<style>
+.card-head{
+    border: 0px;
+    padding: 0px;
+}
+.card-text{
+    color: #004600;
+    font-weight: bold;
+}
+.card-text:hover{
+    text-decoration: none;
+}
+.commit-card-text{
+    color: white;
+    background-color: #004600;
+}
+.commit-card-text:hover{
+    color: white;
+}
+</style>
 {% endblock %}

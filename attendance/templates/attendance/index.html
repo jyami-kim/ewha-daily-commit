@@ -331,7 +331,7 @@ ${item.user}</td>`;
         pagenation_html += "</ul>";
 
 
-        let html = `<table class="table table-borderless table-sm">
+        let html = `<table class="table table-borderless table-sm table-responsive">
   <thead style="background-color: #004600;color: white;">
     <tr>
       <th style="font-weight:normal;" scope="col">No</th>
@@ -365,7 +365,7 @@ ${item.user}</td>`;
             }
 
             html += `<tr data-count="${data_row.count}" data-user="${data_row.user}" class="user">`;
-            html += `<td>${index + 1}</td>`;
+            html += `<td scope="row">${index + 1}</td>`;
             html += `<td style="font-weight:bold">
     <a style="color: #004600" href="/attendance/users/${data_row.user}" target="_blank">
     ${data_row.user}
@@ -619,6 +619,7 @@ ${item.user}</td>`;
     font-size: x-large;
     background-color: #f2f2f2;
 }
+
 
 </style>
 
