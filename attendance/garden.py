@@ -86,6 +86,8 @@ class Garden:
         for message in mongo_collection.find({"attachments.author_name": user}).sort("ts", 1):
             # make attend
             commits = []
+            print("--attanchment--")
+            pprint.pprint(message["attachments"])
             for attachment in message["attachments"]:
                 commits.append(attachment["text"])
             # ts_datetime = datetime.fromtimestamp(float(message["ts"]))
@@ -97,7 +99,7 @@ class Garden:
             date_before_day1 = date - timedelta(days=1)
             hour = ts_datetime.hour
 
-            if date_before_day1 >= start_date and hour < 4 and date_before_day1 not in result:
+            if date_before_day1 >= start_date and hour < 0 and date_before_day1 not in result:
                 # check before day1. if exists, before day1 is already done.
                 result[date_before_day1] = []
                 result[date_before_day1].append(attend)
@@ -132,8 +134,15 @@ class Garden:
 
         print(response)
         for message in response["messages"]:
-            message["ts_for_db"] = datetime.fromtimestamp(float(message["ts"]))
+            print("----message----")
             pprint.pprint(message)
+            message["ts_for_db"] = datetime.fromtimestamp(float(message["ts"]))
+            # if 'attachments' in message.keys() and 'text' in message["attachments"][0]:
+            #     message["text"] = message["attachments"][0]["text"]
+            # else:
+            #     continue
+            if 'attachments' in message.keys() and 'text' not in message["attachments"][0]:
+                continue
 
             try:
                 mongo_collection.insert_one(message)
