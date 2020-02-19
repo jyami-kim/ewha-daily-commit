@@ -120,8 +120,7 @@
             return a.rank - b.rank;
         });
 
-        let rank_html = `<table class="table table-sm table-rank">
-<tbody>`;
+        let rank_html = `<table class="table table-sm table-rank"><tbody>`;
         $.each(data, function (idx, item) {
 
             let avatar_img_url = getAvatarImgUrl(item.user);
@@ -131,10 +130,10 @@
 
             rank_html += `<td>${item.rank}등<br>${Math.round(item.rate)}%</td>`;
             rank_html += `<td>
-<a href="/attendance/users/${item.user}">
-<img src="${avatar_img_url}" width="80" style="vertical-align:top"/>
-</a>
-${item.user}</td>`;
+                <a href="/attendance/users/${item.user}">
+                <img src="${avatar_img_url}" width="80" style="vertical-align:top"/>
+                </a>
+                ${item.user}</td>`;
 
             if (idx % num_per_line === num_per_line - 1)
                 rank_html += `</tr>`;
@@ -147,7 +146,7 @@ ${item.user}</td>`;
 
     // 출석률 차트 그리기
     function draw_attendance_chart(context) {
-
+        google.charts.load('current', {'packages':['line']});
         // 출석률 그래프
         google.charts.setOnLoadCallback(drawChart);
 
@@ -156,21 +155,21 @@ ${item.user}</td>`;
             chartData.addColumn('string', 'Dates');
             chartData.addColumn('number', '출석률');
             chartData.addColumn({type: 'string', role: 'annotation'});
+            
             chartData.addRows(context.daily_rate);
 
             const options = {
-                title: '정원사들 출석률',
-                hAxis: {title: 'Dates'},
+                hAxis: {title: 'Dates',},
                 vAxis: {title: '출석률', maxValue: 100, minValue: 0},
-                legend: 'none',
+                
                 width: "100%",
                 height: 400,
                 colors: ["#004600", "#195819", "#326a32","#669066","#99b599"],
                 displayAnnotations: true,
-                trendlines: {1: {}}    // Draw a trendline for data series 0.
+                // trendlines: {1: {}}    // Draw a trendline for data series 0.
             };
-
             const chart = new google.visualization.LineChart(document.getElementById("attendance_rate"));
+
             chart.draw(chartData, options);
         }
     }
@@ -272,12 +271,13 @@ ${item.user}</td>`;
     // 오늘의 출석부 // 커미터스 정보로 사용중
     function draw_today_attendance(context, today_attendances, data) {
 
+        const GRID_VALUE = 5;
         let today_attendance_html = "<h5>커미터스의 오늘의 출석 : 1시간 갱신</h5>";
         let count_attendance = 0;
         let num_per_line = 10;
 
         $.each(today_attendances, function(idx, row) {
-            if(idx%4 == 0){
+            if(idx%GRID_VALUE == 0){
                 today_attendance_html+= `<div class="row">`;
             }
             let attend_state = "";
@@ -294,11 +294,22 @@ ${item.user}</td>`;
                 </a>
                 <p class="card-text text-center">${row.name}</p>
             </div>`;
-            if(idx%4==3){
+            if(idx%GRID_VALUE==4){
                 today_attendance_html+= `</div>`;
             }
-                
         });
+
+        let size = today_attendances.length;
+        let round = (GRID_VALUE - size % GRID_VALUE) % GRID_VALUE;
+        
+        for(let i =0; i< round; i++){
+            today_attendance_html += 
+            `
+            <div class="card col-sm" style="width: 18rem; padding: 10px; margin: 5px; border: solid; border-color: #004600; ">
+                    <img src="../../static/commit.png" class= "card-img-top" alt="commiters" style="margin:auto"/>
+            </div>`;
+        }
+
 
         today_attendance_html+="</div>";
 
@@ -349,7 +360,7 @@ ${item.user}</td>`;
         }
 
         html += `</tr></thead><tbody>`;
-
+    
         $.each(data, function(index, data_row) {
             let attendances_cell_html = "";
 
@@ -415,12 +426,14 @@ ${item.user}</td>`;
                 total_attend_count: 0, // 전체 출석 카운트
                 total_noshow_count: 0, // 전체 미출석 카운트
                 start_day: new Date(2020, 0, 19), // 시작일 2020.01.19
+                total_days: 70, // 100일간 진행함
+                last_day: new Date(2020, 0, 19).setDate(new Date(2020, 0, 19).getDate() + 70),
                 today: new Date(), // 오늘
                 formatted_today: moment().format("YYYY-MM-DD"),
                 yesterday: new Date(new Date().setDate(new Date().getDate()-1)), // 어제
                 formatted_dates: [], // 시작일~어제 까지 YYYY-MM-DD 리스트
                 all_dates: [], // 시작일~마감 까지 YYYY-MM-DD 리스트
-                total_days: 70, // 100일간 진행함
+                
                 progressed_days: 0, // 진행 일수
                 daily_count: {}, // 날짜별 출석 카운트
                 hourly_count: {}, // 시간별 출석 카운트
@@ -429,17 +442,17 @@ ${item.user}</td>`;
                 attendance_count_by_weekdays: {}, // 요일별 출석수
             };
 
-            console.log(context.start_day.getDate()+1);
             // 출석부 날짜 범위 2020.01.19 ~ 어제 (단, 마지막 날 까지만)
-            for (let d = 0; d < context.total_days; d++) {
-                console.log(moment(new Date().setDate(context.start_day.getDate() + d)).format("YYYYMMDD"));
-                context.all_dates.push(moment(new Date().setDate(context.start_day.getDate() + d)).format("MM/DD"));
+
+            for (let d = new Date(context.start_day); d <= context.last_day; new Date(d.setDate(d.getDate() + 1))) {
+                context.all_dates.push(moment(d).format("MM/DD"));
             }
 
-            console.log(context.all_dates);
-            for (let d = context.start_day; d <= context.yesterday; new Date(d.setDate(d.getDate() + 1))) {
+            console.log(context.start_day);
+            for (let d = new Date(context.start_day); d <= context.yesterday; new Date(d.setDate(d.getDate() + 1))) {
                 context.formatted_dates.push(moment(d).format("YYYY-MM-DD"));
             }
+            console.log(context.formatted_dates);
 
             // 진행 일수
             context.progressed_days = context.formatted_dates.length;
@@ -516,8 +529,11 @@ ${item.user}</td>`;
                 data_row["rank"] = get_rank(data_row.count, counts_by_user);
             });
 
+            // random(0,100) + random(0,100)/100
+
             $.each(context.formatted_dates, function (idx, formatted_date) {
-                let rate = (context.daily_count[formatted_date] / data.length) * 100;
+                var rate = (context.daily_count[formatted_date] / data.length) * 100;
+                rate = Number(rate.toFixed(0));
                 context.daily_rate.push([formatted_date, rate, rate.toString() + "%"]);
             });
 

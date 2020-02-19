@@ -86,8 +86,8 @@ class Garden:
         for message in mongo_collection.find({"attachments.author_name": user}).sort("ts", 1):
             # make attend
             commits = []
-            print("--attanchment--")
-            pprint.pprint(message["attachments"])
+            # print("--attanchment--")
+            # pprint.pprint(message["attachments"])
             for attachment in message["attachments"]:
                 commits.append(attachment["text"])
             # ts_datetime = datetime.fromtimestamp(float(message["ts"]))
@@ -134,8 +134,8 @@ class Garden:
 
         print(response)
         for message in response["messages"]:
-            print("----message----")
-            pprint.pprint(message)
+            # print("----message----")
+            # pprint.pprint(message)
             message["ts_for_db"] = datetime.fromtimestamp(float(message["ts"]))
             # if 'attachments' in message.keys() and 'text' in message["attachments"][0]:
             #     message["text"] = message["attachments"][0]["text"]
