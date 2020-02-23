@@ -4,3 +4,4 @@ users.yaml
 .vscode
 venv
 config.ini
+nohup.out
