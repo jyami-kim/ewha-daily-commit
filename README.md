@@ -6,3 +6,5 @@
 * 참고 레퍼런스 WIKI : [wiki](https://github.com/junho85/garden4/wiki)
 
 ![image](https://user-images.githubusercontent.com/26458200/72746502-98837600-3bf5-11ea-8736-9e31451bd4af.png)
+
+http://www.ewha-commiters.site:8000/attendance/
