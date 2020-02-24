@@ -17,7 +17,7 @@
         today = moment(new Date()).format("YYYY-MM-DD"),
         start_day = moment(new Date(2020, 0, 19)).format("YYYY-MM-DD");
         var remainingDate = moment(today).diff(start_day, 'days');
-        return Math.round(remainingDate/14) + 1;
+        return Math.round(remainingDate/14);
     }
 
     // 구글 차트
