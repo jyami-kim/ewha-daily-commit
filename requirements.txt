@@ -4,5 +4,5 @@ pymongo
 pyyaml
 markdown2
 python-markdown-slack
-markdown===2.6.6
+markdown===3.8.1
 konlpy
